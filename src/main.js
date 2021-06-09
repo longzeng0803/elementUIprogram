@@ -4,6 +4,11 @@ import router from './router'
 import store from './store'
 import './plugins/element.js'
 
+//全局引入axios
+// import axios from 'axios'
+
+// vue.prototype.$http=axios
+
 Vue.config.productionTip = false
 
 new Vue({
