@@ -59,7 +59,12 @@
               :open-delay="500"
               :enterable="false"
             >
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button
+                type="warning"
+                @click="giveUserRoles(scope.row)"
+                icon="el-icon-setting"
+                size="mini"
+              ></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -125,6 +130,30 @@
         <el-button type="primary" @click="setingUserInfo">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 分配角色对话框 -->
+    <!-- 修改用户对话框 -->
+    <el-dialog title="分配角色" :visible.sync="showSetingRoleDidlog" width="50%" @close="setRoleClosed">
+      <!-- 内容主体区域 -->
+      <div>
+        <p>当前用户:{{userInfo.username}}</p>
+        <p>当前角色:{{userInfo.role_name}}</p>
+        <p>分配新角色：
+          <el-select v-model="SelectedRoleId" placeholder="请选择">
+    <el-option
+      v-for="item in rolesData"
+      :key="item.id"
+      :label="item.roleName"
+      :value="item.id">
+    </el-option>
+  </el-select>
+        </p>
+      </div>
+      <!-- 底部区域 -->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showSetingRoleDidlog = false ">取 消</el-button>
+        <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
  
@@ -136,7 +165,9 @@ import {
   setUserInfo,
   getUserInfoById,
   deleteUser,
+  giveUserRole
 } from 'network/users'
+import { getRolesData } from 'network/power'
 export default {
   name: 'Users',
   data() {
@@ -166,6 +197,7 @@ export default {
     return {
       Common: this.$common.common,
       keywords: '',
+      userInfo: {},
       queryInfo: {
         query: '',
         pagenum: 1,
@@ -180,6 +212,8 @@ export default {
         email: '',
         mobile: '',
       },
+      rolesData:[],
+      SelectedRoleId:null,
       dialogFormVisible: false,
       showSetingDidlog: false,
       setFormData: {},
@@ -213,6 +247,7 @@ export default {
           { validator: checkPhone, trigger: 'blur' },
         ],
       },
+      showSetingRoleDidlog: false,
     }
   },
   created() {
@@ -354,6 +389,37 @@ export default {
           })
         })
     },
+    // 分配角色
+    giveUserRoles(role) {
+      this.userInfo = role
+      getRolesData().then((res) => {
+        if (res.meta.status != 200) {
+          return this.$message.error(res.meta.msg)
+        } else {
+          this.rolesData = res.data
+        }
+      })
+      this.showSetingRoleDidlog = true
+    },
+    // 监听分配角色关闭
+    setRoleClosed() {
+      this.SelectedRoleId=null
+    },
+    // 保存角色分配
+    saveRoleInfo(){
+      if(!this.SelectedRoleId){
+        return this.$message.error('请选择要分配的角色')
+      }
+      giveUserRole(this.userInfo.id,this.SelectedRoleId).then((res) => {
+        if (res.meta.status != 200) {
+          return this.$message.error(res.meta.msg)
+        } else {
+          this.$message.success('分配角色成功')
+          this.getUsers()
+          this.showSetingRoleDidlog=false
+        }
+      })
+    }
   },
   props: {},
   components: {},

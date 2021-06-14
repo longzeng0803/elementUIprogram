@@ -46,3 +46,13 @@ export function deleteUser(id){
     url:`users/${id}`
   })
 }
+// 分配用户角色
+export function giveUserRole(id,rid){
+  return request({
+    method:'put',
+    url:`users/${id}/role`,
+    data:{
+      rid
+    }
+  })
+}
